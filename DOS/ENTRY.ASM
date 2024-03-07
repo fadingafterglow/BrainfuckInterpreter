@@ -11,6 +11,7 @@ start:
     call readFile
 
     call readChar
+    call decData
     call printChar
 
     ret
@@ -54,10 +55,20 @@ start:
         mov cx, 1
         mov dx, di
         int 21h
+
+    check0Dh:
         cmp byte ptr DS:[di], 0Dh ; change 0Dh to 0Ah
         jne e
         mov byte ptr DS:[di], 0Ah
         e: ret
+
+    incData:
+        inc word ptr [di]
+        jmp check0Dh
+
+    decData:
+        dec word ptr [di]
+        jmp check0Dh  
 
     flushCodeBuffer: ; print code buffer to stdout (for debug purposes)
         mov ah, 40h
