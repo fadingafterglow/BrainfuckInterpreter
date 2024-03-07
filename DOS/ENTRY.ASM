@@ -11,7 +11,14 @@ start:
     call readFile
 
     call readChar
+    call incData
+    call incPointer
+
+    call readChar
     call decData
+
+    call printChar
+    call decPointer
     call printChar
 
     ret
@@ -69,6 +76,16 @@ start:
     decData:
         dec word ptr [di]
         jmp check0Dh  
+
+    incPointer:
+        inc di
+        inc di
+        ret        
+
+    decPointer:
+        dec di
+        dec di
+        ret
 
     flushCodeBuffer: ; print code buffer to stdout (for debug purposes)
         mov ah, 40h
