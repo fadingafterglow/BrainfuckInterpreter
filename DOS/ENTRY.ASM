@@ -5,8 +5,6 @@
 .code   
 ORG 0100h
 start:
-    xor ax, ax 
-
     call init
 
     intepretLoop:
@@ -48,8 +46,7 @@ start:
             lea dx, temp
             inc cx
         r1: int 21h
-            pop cx
-            jmp intepretLoop
+            jmp p2
 
     temp: DW 0A0Dh
 
@@ -62,9 +59,8 @@ start:
             int 21h
             cmp byte ptr [di], 0Dh ; change 0Dh to 0Ah
             jne p1
-            jmp p0
-            mov byte ptr [di], 0Ah
-        p1: cmp byte ptr [di], 0 ; change 00h to FFFFh
+            jmp p0 ; skip 0Ah
+        p1: cmp al, 0 ; change EOF to FFFFh
             jne p2
             mov word ptr [di], 0FFFFh
         p2: pop cx
@@ -129,7 +125,7 @@ start:
         lea si, codeBuffer ; init pointers
         lea di, dataBuffer   
 
-        xor bx, bx ; prepare filename
+        xor bh, bh ; prepare filename
         mov bl, byte ptr DS:[80h]
         mov byte ptr [bx+80h+1], 0
 
@@ -146,15 +142,15 @@ start:
         mov bx, ax ; add terminator to code buffer
         mov byte ptr [bx+si], 0
 
-        mov bx, 9999 ; fill data buffer with zeroes
+        mov bx, 18888 ; fill data buffer with zeroes
         fillLoop:
             test bx, bx
             js f
-            mov word ptr [bx+di], 0
+            mov byte ptr [bx+di], 0
             dec bx
             jmp fillLoop
 
-        f: xor cx, cx; setup registers 
+        f: xor cl, cl; setup registers 
         ret
 
 end start
