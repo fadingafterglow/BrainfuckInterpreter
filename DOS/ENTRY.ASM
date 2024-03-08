@@ -14,20 +14,20 @@ start:
 
         test ah, ah
         jz exit
-        cmp ah, '+'
-        je incData
-        cmp ah, '-'
-        je decData
+        cmp ah, '['
+        je startLoop
         cmp ah, '>'
         je incPointer
         cmp ah, '<'
         je decPointer
-        cmp ah, '.'
+        sub ah, '+'
+        jz incData
+        dec ah ; check ,
+        jz readChar
+        dec ah ; check - 
+        je decData
+        dec ah ; check .
         je printChar
-        cmp ah, ','
-        je readChar
-        cmp ah, '['
-        je startLoop
 
         jmp intepretLoop
 
