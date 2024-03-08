@@ -38,29 +38,40 @@ start:
         ret
 
     printChar: ; print ascii char to stdout
+        push cx
         mov ah, 40h
         mov bx, 1
-    check: ; change 0Dh to 0Ah, 1Ah to FFFFh
-        push cx
-        mov cx, 1
         mov dx, di
-        cmp byte ptr [di], 0Dh 
-        jne e1
-        mov byte ptr [di], 0Ah
-    e1: int 21h
-        cmp byte ptr [di], 1Ah 
-        jne e2
-        mov word ptr [di], 0FFFFh
-    e2: pop cx
-        jmp intepretLoop
+        mov cx, 1
+        r0: cmp byte ptr [di], 0Ah 
+            jne r1
+            lea dx, temp
+            inc cx
+        r1: int 21h
+            pop cx
+            jmp intepretLoop
+
+    temp: DW 0A0Dh
 
     readChar: ; read ascii char from stdin
-        mov ah, 3Fh
+        push cx
         mov bx, 0
-        jmp check
+        mov cx, 1
+        mov dx, di
+        p0: mov ah, 3Fh
+            int 21h
+            cmp byte ptr [di], 0Dh ; change 0Dh to 0Ah
+            jne p1
+            jmp p0
+            mov byte ptr [di], 0Ah
+        p1: cmp byte ptr [di], 0 ; change 00h to FFFFh
+            jne p2
+            mov word ptr [di], 0FFFFh
+        p2: pop cx
+            jmp intepretLoop
 
     incData: ; increase element under pointer
-        inc word ptr DS:[di]
+        inc word ptr [di]
         jmp intepretLoop
 
     decData: ; decrase element under pointer 
@@ -120,7 +131,7 @@ start:
 
         xor bx, bx ; prepare filename
         mov bl, byte ptr DS:[80h]
-        mov byte ptr DS:[bx+80h+1], 0
+        mov byte ptr [bx+80h+1], 0
 
         mov ah, 3Dh ; open file
         mov dx, 0082h 
