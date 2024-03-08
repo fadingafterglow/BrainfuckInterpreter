@@ -9,24 +9,25 @@ start:
     mov bp, sp
 
     intepretLoop:
-        mov ah, byte ptr [si]
+        xor ah, ah ; has to be cleaned
+        mov al, byte ptr [si]
         inc si ; si points to next instruction
 
-        test ah, ah
+        test al, al
         jz exit
-        cmp ah, '['
+        cmp al, '['
         je startLoop
-        cmp ah, '>'
+        cmp al, '>'
         je incPointer
-        cmp ah, '<'
+        cmp al, '<'
         je decPointer
-        sub ah, '+'
+        sub al, '+'
         jz incData
-        dec ah ; check ,
+        dec ax ; check ,
         jz readChar
-        dec ah ; check - 
+        dec ax ; check - 
         je decData
-        dec ah ; check .
+        dec ax ; check .
         je printChar
 
         jmp intepretLoop
@@ -38,7 +39,7 @@ start:
 
     printChar: ; print ascii char to stdout
         mov ah, 40h
-        mov bx, 1
+        mov bl, 1
         mov dx, di
         mov cx, 1
         r0: cmp byte ptr [di], 0Ah 
@@ -46,12 +47,12 @@ start:
             lea dx, temp
             inc cx
         r1: int 21h
-            jmp p2
+            jmp intepretLoop
 
     temp: DW 0A0Dh
 
     readChar: ; read ascii char from stdin
-        mov bx, 0
+        xor bl, bl
         mov cx, 1
         mov dx, di
         p0: mov ah, 3Fh
@@ -59,11 +60,10 @@ start:
             cmp byte ptr [di], 0Dh ; change 0Dh to 0Ah
             jne p1
             jmp p0 ; skip 0Ah
-        p1: cmp al, 0 ; change EOF to FFFFh
-            jne p2
+        p1: test al, al ; change EOF to FFFFh
+            jnz p2
             mov word ptr [di], 0FFFFh
-        p2: 
-            jmp intepretLoop
+        p2: jmp intepretLoop
 
     incData: ; increase element under pointer
         inc word ptr [di]
@@ -86,7 +86,7 @@ start:
     startLoop:
         push si ; save first loop instruction
         xor al, al
-        inc al        
+        inc ax        
         findEnd:
             mov ah, byte ptr [si]
             inc si ; si points to next instruction
@@ -96,10 +96,10 @@ start:
             je nestedDec
             jmp findEnd
         nestedInc:
-            inc al
+            inc ax
             jmp findEnd
         nestedDec:
-            dec al
+            dec ax
             test al, al
             jnz findEnd
             mov byte ptr [si-1], 0
@@ -114,16 +114,14 @@ start:
 
     endLoop:
         mov byte ptr [si-1], ']'
-        inc sp
-        inc sp
+        pop dx ; remove return address
         jmp intepretLoop
 
     init: 
         lea si, codeBuffer ; init pointers
         lea di, dataBuffer   
 
-        xor bh, bh ; prepare filename
-        mov bl, byte ptr DS:[80h]
+        mov bl, byte ptr DS:[80h] ; prepare filename
         mov byte ptr [bx+80h+1], 0
 
         mov ah, 3Dh ; open file
@@ -139,15 +137,13 @@ start:
         mov bx, ax ; add terminator to code buffer
         mov byte ptr [bx+si], 0
 
-        mov bx, 18888 ; fill data buffer with zeroes
+        mov bx, 20000 ; fill data buffer with zeroes
         fillLoop:
-            test bx, bx
-            js f
-            mov byte ptr [bx+di], 0
             dec bx
+            mov byte ptr [bx+di], 0
+            jz f
             jmp fillLoop
 
         f: ret
 
 end start
-
