@@ -6,6 +6,7 @@
 ORG 0100h
 start:
     call init
+    mov bp, sp
 
     intepretLoop:
         mov ah, byte ptr [si]
@@ -31,12 +32,11 @@ start:
         jmp intepretLoop
 
     exit:
-        test cl, cl ; if not zero we are iterating through loop
-        jnz finishLoopIteration
+        cmp bp, sp ; if not equal we are iterating through loop
+        jne finishLoopIteration
         ret
 
     printChar: ; print ascii char to stdout
-        push cx
         mov ah, 40h
         mov bx, 1
         mov dx, di
@@ -51,7 +51,6 @@ start:
     temp: DW 0A0Dh
 
     readChar: ; read ascii char from stdin
-        push cx
         mov bx, 0
         mov cx, 1
         mov dx, di
@@ -63,7 +62,7 @@ start:
         p1: cmp al, 0 ; change EOF to FFFFh
             jne p2
             mov word ptr [di], 0FFFFh
-        p2: pop cx
+        p2: 
             jmp intepretLoop
 
     incData: ; increase element under pointer
@@ -87,8 +86,7 @@ start:
     startLoop:
         push si ; save first loop instruction
         xor al, al
-        inc al
-        inc cl
+        inc al        
         findEnd:
             mov ah, byte ptr [si]
             inc si ; si points to next instruction
@@ -115,7 +113,6 @@ start:
         jmp intepretLoop
 
     endLoop:
-        dec cl
         mov byte ptr [si-1], ']'
         inc sp
         inc sp
@@ -150,8 +147,7 @@ start:
             dec bx
             jmp fillLoop
 
-        f: xor cl, cl; setup registers 
-        ret
+        f: ret
 
 end start
 
