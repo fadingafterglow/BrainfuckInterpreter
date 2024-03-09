@@ -6,7 +6,6 @@
 ORG 0100h
 start:
     call init
-    mov bp, sp
 
     intepretLoop:
         xor ah, ah ; has to be cleaned
@@ -17,6 +16,8 @@ start:
         jz exit
         cmp al, '['
         je startLoop
+        cmp al, ']'
+        je endLoop
         cmp al, '>'
         je incPointer
         cmp al, '<'
@@ -32,10 +33,7 @@ start:
 
         jmp intepretLoop
 
-    exit:
-        cmp bp, sp ; if not equal we are iterating through loop
-        jne finishLoopIteration
-        ret
+    exit: ret
 
     printChar: ; print ascii char to stdout
         mov ah, 40h
@@ -83,39 +81,36 @@ start:
         dec di
         jmp intepretLoop
 
+    endLoop:
+        pop si ; restore first loop instruction
+
     startLoop:
         push si ; save first loop instruction
+    
+    checkCondition:
+        or word ptr [di], 0        
+        jnz intepretLoop
+
         xor al, al
         inc ax        
         findEnd:
-            mov ah, byte ptr [si]
-            inc si ; si points to next instruction
-            cmp ah, '['
+            cmp byte ptr [si], '['
             je nestedInc
-            cmp ah, ']'
+            cmp byte ptr [si], ']'
             je nestedDec
+        updatePointer:    
+            inc si
             jmp findEnd
         nestedInc:
             inc ax
-            jmp findEnd
+            jmp updatePointer
         nestedDec:
             dec ax
             test al, al
-            jnz findEnd
-            mov byte ptr [si-1], 0
-
-    finishLoopIteration:
-        mov dx, word ptr [di]
-        test dx, dx
-        jz endLoop
-        pop si ; restore address of first loop instruction
-        push si
-        jmp intepretLoop
-
-    endLoop:
-        mov byte ptr [si-1], ']'
-        pop dx ; remove return address
-        jmp intepretLoop
+            jnz updatePointer
+            inc si
+            pop dx ; remove return address
+            jmp intepretLoop
 
     init: 
         lea si, codeBuffer ; init pointers
