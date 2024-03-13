@@ -1,11 +1,32 @@
 .model tiny
 .data
-    codeBuffer DB 10001 dup(?)
+    codeBuffer DB 10000 dup(?)
     dataBuffer DW 10000 dup(?)
 .code   
 ORG 0100h
 start:
-    call init
+    lea si, codeBuffer ; init pointers
+    lea di, dataBuffer   
+
+    fileReading: ; read code from file
+        mov ah, 1Ah ; set DTA
+        mov dx, si
+        int 21h
+
+        mov ah, 0Fh ; open file
+        mov dx, 5Ch
+        int 21h
+
+        mov ah, 27h ; read 250 records (250 * 40 = 10000 bytes) 
+        mov cl, 250
+        int 21h
+
+    mov bx, 20000 
+    fillLoop: ; fill data buffer with zeroes
+        dec bx
+        mov byte ptr [bx+di], 0
+        jz intepretLoop
+        jmp fillLoop
 
     intepretLoop:
         xor ah, ah ; has to be cleaned
@@ -39,7 +60,7 @@ start:
         mov ah, 40h
         mov bl, 1
         mov dx, di
-        mov cx, 1
+        mov cl, 1
         r0: cmp byte ptr [di], 0Ah 
             jne r1
             lea dx, temp
@@ -51,7 +72,7 @@ start:
 
     readChar: ; read ascii char from stdin
         xor bl, bl
-        mov cx, 1
+        mov cl, 1
         mov dx, di
         p0: mov ah, 3Fh
             int 21h
@@ -111,34 +132,5 @@ start:
             inc si
             pop dx ; remove return address
             jmp intepretLoop
-
-    init: 
-        lea si, codeBuffer ; init pointers
-        lea di, dataBuffer   
-
-        mov bl, byte ptr DS:[80h] ; prepare filename
-        mov byte ptr [bx+80h+1], 0
-
-        mov ah, 3Dh ; open file
-        mov dx, 0082h 
-        int 21h
-
-        mov bx, ax ; save file handler
-        mov ah, 3Fh ; read into buffer
-        mov dx, si
-        mov cx, 10000
-        int 21h
-
-        mov bx, ax ; add terminator to code buffer
-        mov byte ptr [bx+si], 0
-
-        mov bx, 20000 ; fill data buffer with zeroes
-        fillLoop:
-            dec bx
-            mov byte ptr [bx+di], 0
-            jz f
-            jmp fillLoop
-
-        f: ret
 
 end start
