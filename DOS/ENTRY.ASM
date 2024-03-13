@@ -1,6 +1,6 @@
 .model tiny
 .data
-    codeBuffer DB 10000 dup(?)
+    codeBuffer DB 10001 dup(?)
     dataBuffer DW 10000 dup(?)
 .code   
 ORG 0100h
@@ -17,8 +17,8 @@ start:
         mov dx, 5Ch
         int 21h
 
-        mov ah, 27h ; read 250 records (250 * 40 = 10000 bytes) 
-        mov cl, 250
+        mov ah, 27h 
+        mov cl, 79 ; read 79 records (79 * 128 = 10112 bytes) 
         int 21h
 
     mov bx, 20000 
@@ -109,27 +109,20 @@ start:
         push si ; save first loop instruction
     
     checkCondition:
-        or word ptr [di], 0        
+        cmp word ptr [di], 0        
         jnz intepretLoop
 
-        xor al, al
-        inc ax        
+        mov al, 1    
         findEnd:
             cmp byte ptr [si], '['
-            je nestedInc
-            cmp byte ptr [si], ']'
-            je nestedDec
-        updatePointer:    
-            inc si
-            jmp findEnd
-        nestedInc:
+            jne f1
             inc ax
-            jmp updatePointer
-        nestedDec:
+        f1: cmp byte ptr [si], ']'
+            jne f2
             dec ax
+        f2: inc si   
             test al, al
-            jnz updatePointer
-            inc si
+            jnz findEnd
             pop dx ; remove return address
             jmp intepretLoop
 
