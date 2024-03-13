@@ -8,7 +8,7 @@ start:
     lea si, codeBuffer ; init pointers
     lea di, dataBuffer   
 
-    fileReading: ; read code from file
+    readFile: ; read code from file
         mov ah, 1Ah ; set DTA
         mov dx, si
         int 21h
@@ -24,14 +24,16 @@ start:
     mov bx, 20000 
     fillLoop: ; fill data buffer with zeroes
         dec bx
-        mov byte ptr [bx+di], 0
-        jz intepretLoop
-        jmp fillLoop
+        mov byte ptr [bx+di], ch ; ch = 0 on startup
+        jnz fillLoop
 
     intepretLoop:
         xor ah, ah ; has to be cleaned
         mov al, byte ptr [si]
         inc si ; si points to next instruction
+
+        mov dx, di ; prepare registers for read/write interrupts
+        mov cl, 1
 
         test al, al
         jz exit
@@ -58,31 +60,26 @@ start:
 
     printChar: ; print ascii char to stdout
         mov ah, 40h
-        mov bl, 1
-        mov dx, di
-        mov cl, 1
+        inc bx
         r0: cmp byte ptr [di], 0Ah 
             jne r1
             lea dx, temp
             inc cx
         r1: int 21h
+            dec bx
             jmp intepretLoop
 
     temp: DW 0A0Dh
 
     readChar: ; read ascii char from stdin
-        xor bl, bl
-        mov cl, 1
-        mov dx, di
-        p0: mov ah, 3Fh
+            mov ah, 3Fh
             int 21h
             cmp byte ptr [di], 0Dh ; change 0Dh to 0Ah
-            jne p1
-            jmp p0 ; skip 0Ah
-        p1: test al, al ; change EOF to FFFFh
-            jnz p2
+            je readChar ; skip 0Ah
+            test al, al ; change EOF to FFFFh
+            jnz p0
             mov word ptr [di], 0FFFFh
-        p2: jmp intepretLoop
+        p0: jmp intepretLoop
 
     incData: ; increase element under pointer
         inc word ptr [di]
