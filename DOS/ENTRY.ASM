@@ -1,16 +1,13 @@
 .model tiny
-.data
-    codeBuffer DB 10001 dup(?)
-    dataBuffer DW 10000 dup(?)
 .code   
 ORG 0100h
 start:
-    lea si, codeBuffer ; init pointers
-    mov di, si   
+    mov si, 0A0Dh ; init code pointer
 
-    mov ch, 4Fh ; zero buffers
-    rep stosb
-    lea di, dataBuffer
+    std 
+    mov ch, 4Eh ; CX = 4EFFh = 20223
+    rep stosb ; zero buffer
+    inc di ; init data pointer
 
     readFile: ; read code from file
         mov ah, 1Ah ; set DTA
@@ -61,13 +58,11 @@ start:
         inc bx
         r0: cmp byte ptr [di], 0Ah 
             jne r1
-            lea dx, temp
+            mov dx, 101h ; points to 0D0Ah in memory
             inc cx
         r1: int 21h
             dec bx
             jmp intepretLoop
-
-    temp: DW 0A0Dh
 
     readChar: ; read ascii char from stdin
             mov ah, 3Fh
