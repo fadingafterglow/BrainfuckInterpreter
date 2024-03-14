@@ -99,8 +99,8 @@ start:
         push si ; save first loop instruction
     
     checkCondition:
-        cmp word ptr [di], 0        
-        jnz intepretLoop
+        cmp word ptr [di], bx ; bx = 0        
+        jne intepretLoop
 
         mov al, 1    
         findEnd:
