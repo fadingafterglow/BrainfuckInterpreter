@@ -6,7 +6,11 @@
 ORG 0100h
 start:
     lea si, codeBuffer ; init pointers
-    lea di, dataBuffer   
+    mov di, si   
+
+    mov ch, 4Fh ; zero buffers
+    rep stosb
+    lea di, dataBuffer
 
     readFile: ; read code from file
         mov ah, 1Ah ; set DTA
@@ -20,12 +24,6 @@ start:
         mov ah, 27h 
         mov cl, 79 ; read 79 records (79 * 128 = 10112 bytes) 
         int 21h
-
-    mov bx, 20000 
-    fillLoop: ; fill data buffer with zeroes
-        dec bx
-        mov byte ptr [bx+di], ch ; ch = 0 on startup
-        jnz fillLoop
 
     intepretLoop:
         xor ah, ah ; has to be cleaned
