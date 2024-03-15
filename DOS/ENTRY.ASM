@@ -92,21 +92,20 @@ start:
     startLoop:
         push si ; save first loop instruction
     
-    checkCondition:
+    checkCondition: 
         cmp word ptr [di], bx ; bx = 0        
         jne intepretLoop
-
-        mov al, 1    
+ 
         findEnd:
-            cmp byte ptr [si], '['
+            mov al, byte ptr [si]
+            inc si
+            cmp al, '['
             jne f1
-            inc ax
-        f1: cmp byte ptr [si], ']'
+            inc cx
+        f1: cmp al, ']'
             jne f2
-            dec ax
-        f2: inc si   
-            test al, al
-            jnz findEnd
+            dec cx
+        f2: jnz findEnd
             pop dx ; remove return address
             jmp intepretLoop
 
