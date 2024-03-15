@@ -19,7 +19,7 @@ start:
         int 21h
 
         mov ah, 27h 
-        mov cl, 79 ; read 79 records (79 * 128 = 10112 bytes) 
+        mov cl, 125 ; read 125 records (125 * 80 = 10000 bytes) 
         int 21h
 
     intepretLoop:
@@ -30,39 +30,50 @@ start:
         mov dx, di ; prepare registers for read/write interrupts
         mov cl, 1
 
-        test al, al
-        jz exit
-        cmp al, '['
-        je startLoop
-        cmp al, ']'
-        je endLoop
-        cmp al, '>'
-        je incPointer
-        cmp al, '<'
-        je decPointer
-        sub al, '+'
-        jz incData
-        dec ax ; check ,
-        jz readChar
-        dec ax ; check - 
-        je decData
-        dec ax ; check .
-        je printChar
+    c0: test al, al
+        jnz c1
+            ret ; exit
 
-        jmp intepretLoop
+    c1: cmp al, '['
+            je startLoop
 
-    exit: ret
+    c2: cmp al, ']'
+            je endLoop
 
-    printChar: ; print ascii char to stdout
-        mov ah, 40h
-        inc bx
-        r0: cmp byte ptr [di], 0Ah 
-            jne r1
-            mov dx, 101h ; points to 0D0Ah in memory
-            inc cx
-        r1: int 21h
-            dec bx
-            jmp intepretLoop
+    c3: cmp al, '>'
+        jne c4
+            inc di ; increase pointer
+            inc di
+
+    c4: cmp al, '<'
+        jne c5
+            dec di ; decrease pointer
+            dec di
+
+    c5: sub al, '+'
+        jnz c6
+            inc word ptr [di] ; increase element under pointer
+
+    c6: dec ax ; check ,
+            jz readChar
+
+    c7: dec ax ; check - 
+        jnz c8
+            dec word ptr [di] ; decrase element under pointer
+
+    c8: dec ax ; check .
+        jnz c9
+            mov ah, 40h ; print ascii char to stdout
+            inc bx
+            r0: cmp byte ptr [di], 0Ah 
+                jne r1
+                mov dx, 101h ; points to 0D0Ah in memory
+                inc cx
+            r1: int 21h
+                dec bx
+
+    c9: jmp intepretLoop
+
 
     readChar: ; read ascii char from stdin
             mov ah, 3Fh
@@ -74,23 +85,6 @@ start:
             mov word ptr [di], 0FFFFh
         p0: jmp intepretLoop
 
-    incData: ; increase element under pointer
-        inc word ptr [di]
-        jmp intepretLoop
-
-    decData: ; decrase element under pointer 
-        dec word ptr [di]
-        jmp intepretLoop  
-
-    incPointer: ; increase pointer  
-        inc di
-        inc di
-        jmp intepretLoop    
-
-    decPointer: ; decrease pointer  
-        dec di
-        dec di
-        jmp intepretLoop
 
     endLoop:
         pop si ; restore first loop instruction
