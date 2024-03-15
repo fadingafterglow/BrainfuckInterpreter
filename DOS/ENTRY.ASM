@@ -55,7 +55,15 @@ start:
             inc word ptr [di] ; increase element under pointer
 
     c6: dec ax ; check ,
-            jz readChar
+        jnz c7
+        i0: mov ah, 3Fh ; read ascii char from stdin
+            int 21h
+            cmp byte ptr [di], 0Dh ; change 0Dh to 0Ah
+            je i0 ; skip 0Ah
+            test al, al ; change EOF to FFFFh
+            jnz i1
+            mov word ptr [di], 0FFFFh
+        i1: dec ax ; decrement to prevent incorrect intepretation
 
     c7: dec ax ; check - 
         jnz c8
@@ -65,25 +73,14 @@ start:
         jnz c9
             mov ah, 40h ; print ascii char to stdout
             inc bx
-            r0: cmp byte ptr [di], 0Ah 
-                jne r1
+            p0: cmp byte ptr [di], 0Ah 
+                jne p1
                 mov dx, 101h ; points to 0D0Ah in memory
                 inc cx
-            r1: int 21h
+            p1: int 21h
                 dec bx
 
     c9: jmp intepretLoop
-
-
-    readChar: ; read ascii char from stdin
-            mov ah, 3Fh
-            int 21h
-            cmp byte ptr [di], 0Dh ; change 0Dh to 0Ah
-            je readChar ; skip 0Ah
-            test al, al ; change EOF to FFFFh
-            jnz p0
-            mov word ptr [di], 0FFFFh
-        p0: jmp intepretLoop
 
 
     endLoop:
