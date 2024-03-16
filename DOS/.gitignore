@@ -6,6 +6,7 @@ cmp.asm
 *.BAT
 *.OK
 *.B
+*.INP
 MYTEST
 IN
 OUT

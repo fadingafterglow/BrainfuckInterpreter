@@ -56,6 +56,7 @@ start:
 
     c6: dec ax ; check ,
         jnz c7
+            mov word ptr [di], ax ; clear buffer cell
         i0: mov ah, 3Fh ; read ascii char from stdin
             int 21h
             cmp byte ptr [di], 0Dh ; change 0Dh to 0Ah
