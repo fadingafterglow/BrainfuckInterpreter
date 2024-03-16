@@ -57,14 +57,13 @@ start:
     c6: dec ax ; check ,
         jnz c7
             mov word ptr [di], ax ; clear buffer cell
-        i0: mov ah, 3Fh ; read ascii char from stdin
-            int 21h
-            cmp byte ptr [di], 0Dh ; change 0Dh to 0Ah
-            je i0 ; skip 0Ah
-            test al, al ; change EOF to FFFFh
-            jnz i1
-            mov word ptr [di], 0FFFFh
-        i1: dec ax ; decrement to prevent incorrect intepretation
+            i0: mov ah, 3Fh ; read ascii char from stdin
+                int 21h
+                cmp byte ptr [di], 0Dh ; change 0Dh to 0Ah
+                je i0 ; skip to 0Ah
+                dec ax ; check if we have reached EOF
+                jz c7
+                mov word ptr [di], ax ; change EOF to FFFFh
 
     c7: dec ax ; check - 
         jnz c8
