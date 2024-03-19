@@ -8,6 +8,7 @@ start:
     mov ch, 4Eh ; CX = 4EFFh = 20223
     rep stosb ; zero buffer
     inc di ; init data pointer
+    cld
 
     readFile: ; read code from file
         mov ah, 1Ah ; set DTA
@@ -24,8 +25,7 @@ start:
 
     intepretLoop:
         xor ah, ah ; has to be cleaned
-        mov al, byte ptr [si]
-        inc si ; si points to next instruction
+        lodsb ; load instruction into al
 
         mov dx, di ; prepare registers for read/write interrupts
         mov cl, 1
@@ -94,8 +94,7 @@ start:
         jne intepretLoop
  
         findEnd:
-            mov al, byte ptr [si]
-            inc si
+            lodsb ; load instruction into al
             cmp al, '['
             jne f1
             inc cx
