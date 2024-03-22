@@ -2,7 +2,7 @@
 .code   
 ORG 0100h
 start:
-    mov si, 0A0Dh ; init code pointer
+    mov si, 0A5Ch ; init code pointer
 
     std 
     mov ch, 4Eh ; CX = 4EFFh = 20223
@@ -16,7 +16,7 @@ start:
         int 21h
 
         mov ah, 0Fh ; open file
-        mov dx, 5Ch
+        xor dh, dh
         int 21h
 
         mov ah, 27h 
@@ -27,7 +27,7 @@ start:
         xor ah, ah ; has to be cleaned
         lodsb ; load instruction into al
 
-        mov dx, di ; prepare registers for read/write interrupts
+        mov dx, di ; prepare registers for read interrupt
         mov cl, 1
 
     c0: test al, al
@@ -71,14 +71,13 @@ start:
 
     c8: dec ax ; check .
         jnz c9
-            mov ah, 40h ; print ascii char to stdout
-            inc bx
-            p0: cmp byte ptr [di], 0Ah 
-                jne p1
-                mov dx, 101h ; points to 0D0Ah in memory
-                inc cx
-            p1: int 21h
-                dec bx
+            mov ah, 02h
+            cmp byte ptr [di], 0Ah 
+            jne p1
+                mov dl, 0Dh
+                int 21h
+            p1: mov dl, byte ptr [di]
+                int 21h
 
     c9: jmp intepretLoop
 
