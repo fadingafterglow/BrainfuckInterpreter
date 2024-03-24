@@ -4,12 +4,6 @@ ORG 0100h
 start:
     mov si, 0A5Ch ; init code pointer
 
-    std 
-    mov ch, 4Eh ; CX = 4EFFh = 20223
-    rep stosb ; zero buffer
-    inc di ; init data pointer
-    cld
-
     readFile: ; read code from file
         mov ah, 1Ah ; set DTA
         mov dx, si
@@ -19,9 +13,14 @@ start:
         xor dh, dh
         int 21h
 
-        mov ah, 27h 
-        mov cl, 125 ; read 125 records (125 * 80 = 10000 bytes) 
+        mov ah, 27h ; read FF records (255 * 80 = 20400 bytes at most)
         int 21h
+
+    mov ch, 4Eh ; fill data buffer with zeroes
+    zeroBuffer:
+        dec di
+        mov byte ptr [di], bl
+        loop zeroBuffer
 
     intepretLoop:
         xor ah, ah ; has to be cleaned
