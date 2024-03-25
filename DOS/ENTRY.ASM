@@ -3,8 +3,8 @@
 ORG 0100h
 start:
     readFile: ; read code from file
-	    mov	ax, 1A5Ch ; set DTA
-	    mov	dh, 0Fh
+        mov	ax, 1A5Ch ; set DTA
+        mov	dh, 0Fh
         int 21h
 
         mov si, dx ; init code pointer
@@ -26,11 +26,8 @@ start:
     intitCX: inc cx
     intepretLoop:
         lodsb ; load instruction into al
-        cbw ; clean ah
-
-        mov dx, di ; prepare registers for read interrupt
-
-    c0: test al, al
+        
+    c0: aad 0 ; clean ah, check if al == 0
         jnz c1
             ret ; exit
 
@@ -57,6 +54,7 @@ start:
     c6: dec ax ; check ,
         jnz c7
             mov word ptr [di], ax ; clear buffer cell
+            mov dx, di
             i0: mov ah, 3Fh ; read ascii char from stdin
                 int 21h
                 cmp byte ptr [di], 0Dh ; change 0Dh to 0Ah
