@@ -22,12 +22,13 @@ start:
         mov byte ptr [di], bl
         loop zeroBuffer
 
+
+    intitCX: inc cx
     intepretLoop:
         xor ah, ah ; has to be cleaned
         lodsb ; load instruction into al
 
         mov dx, di ; prepare registers for read interrupt
-        mov cl, 1
 
     c0: test al, al
         jnz c1
@@ -100,6 +101,6 @@ start:
             dec cx
         f2: jnz findEnd
             pop dx ; remove return address
-            jmp intepretLoop
+            jmp intitCX
 
 end start
