@@ -2,16 +2,16 @@
 .code   
 ORG 0100h
 start:
-    mov si, 0A5Ch ; init code pointer
-
     readFile: ; read code from file
-        mov ah, 1Ah ; set DTA
-        mov dx, si
+	    mov	ax, 1A5Ch ; set DTA
+	    mov	dh, 0Fh
         int 21h
 
-        mov ah, 0Fh ; open file
-        xor dh, dh
-        int 21h
+        mov si, dx ; init code pointer
+
+        cbw
+        xchg ax, dx ; ah = 0Fh dx = 005Ch 
+        int 21h ; open file
 
         mov ah, 27h ; read FF records (255 * 80 = 20400 bytes at most)
         int 21h
@@ -25,8 +25,8 @@ start:
 
     intitCX: inc cx
     intepretLoop:
-        xor ah, ah ; has to be cleaned
         lodsb ; load instruction into al
+        cbw ; clean ah
 
         mov dx, di ; prepare registers for read interrupt
 
