@@ -13,17 +13,12 @@ start:
         xchg ax, dx ; ah = 0Fh dx = 005Ch 
         int 21h ; open file
 
-        mov ah, 27h ; read FF records (255 * 80 = 20400 bytes at most)
-        int 21h
+        mov ah, 27h
+        sub byte ptr [bx+6Bh], ah ; set record size to D980h (= 55680) bytes
+        int 21h ; read code from file and zero bytes till the F3DCh (= 62428)
+                        
+    shr di, cl ; init data pointer (FFFEh = 65534  -> 7FFFh = 32767)
 
-    mov ch, 4Eh ; fill data buffer with zeroes
-    zeroBuffer:
-        dec di
-        mov byte ptr [di], bl
-        loop zeroBuffer
-
-
-    intitCX: inc cx
     intepretLoop:
         lodsb ; load instruction into al
         
@@ -99,6 +94,7 @@ start:
             dec cx
         f2: jnz findEnd
             pop dx ; remove return address
-            jmp intitCX
+            inc cx ; restore cx
+            jmp intepretLoop
 
 end start
