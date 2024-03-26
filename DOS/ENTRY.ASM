@@ -3,8 +3,8 @@
 ORG 0100h
 start:
     readFile: ; read code from file
-        mov	ax, 1A5Ch ; set DTA
-        mov	dh, 0Fh
+        mov ax, 1A5Ch ; set DTA
+        mov dh, 0Fh
         int 21h
 
         mov si, dx ; init code pointer
@@ -30,24 +30,48 @@ start:
             je startLoop
 
     c2: cmp al, ']'
-            je endLoop
+            jne c3        
+                endLoop:
+                    jcxz balanceR
+                    pop si ; restore first loop instruction
+                
+                startLoop:
+                    jcxz balanceL
+                    push si ; save first loop instruction
 
-    c3: cmp al, '>'
-        jne c4
+                checkCondition: 
+                    cmp word ptr [di], bx ; bx = 0        
+                    jne intepretLoop
+                    dec cx ; start bracket balancing
+
+                balanceL:
+                    inc bx
+                    inc bx
+
+                balanceR:
+                    dec bx
+                    jnz intepretLoop
+                    pop dx ; remove return address from the stack
+                    inc cx ; stop bracket balancing
+
+    c3: jcxz intepretLoop ; cx == 0 means that we are balancing brackets
+
+    c4: cmp al, '>'
+        jne c5
             inc di ; increase pointer
             inc di
 
-    c4: cmp al, '<'
-        jne c5
+    c5: cmp al, '<'
+        jne c6
             dec di ; decrease pointer
             dec di
 
-    c5: sub al, '+'
-        jnz c6
+    c6: sub al, '+'
+        jnz c7
             inc word ptr [di] ; increase element under pointer
 
-    c6: dec ax ; check ,
-        jnz c7
+    c7: dec ax ; check ,
+        jnz c8
             mov word ptr [di], ax ; clear buffer cell
             mov dx, di
             i0: mov ah, 3Fh ; read ascii char from stdin
@@ -57,12 +81,12 @@ start:
                 dec ax ; check if we have reached EOF
                 jnz i1
 
-    c7: dec ax ; check - 
-        jnz c8
+    c8: dec ax ; check - 
+        jnz c9
         i1: dec word ptr [di] ; decrase element under pointer
 
-    c8: dec ax ; check .
-        jnz c9
+    c9: dec ax ; check .
+        jnz c10
             mov ah, 02h
             cmp byte ptr [di], 0Ah 
             jne p1
@@ -71,30 +95,6 @@ start:
             p1: mov dl, byte ptr [di]
                 int 21h
 
-    c9: jmp intepretLoop
-
-
-    endLoop:
-        pop si ; restore first loop instruction
-
-    startLoop:
-        push si ; save first loop instruction
-    
-    checkCondition: 
-        cmp word ptr [di], bx ; bx = 0        
-        jne intepretLoop
- 
-        findEnd:
-            lodsb ; load instruction into al
-            cmp al, '['
-            jne f1
-            inc cx
-        f1: cmp al, ']'
-            jne f2
-            dec cx
-        f2: jnz findEnd
-            pop dx ; remove return address
-            inc cx ; restore cx
-            jmp intepretLoop
+    c10: jmp intepretLoop
 
 end start
