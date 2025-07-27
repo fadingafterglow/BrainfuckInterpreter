@@ -1,0 +1,1 @@
+This is a submission for the competition held during the Computer Architectures course at NaUKMA. The main goal was to write the smallest (in terms of compiled program size) working interpreter for brainfuck programming language.
